@@ -174,3 +174,7 @@ git push origin v1.2.3
 # or, if the tag already exists locally:
 make release
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
