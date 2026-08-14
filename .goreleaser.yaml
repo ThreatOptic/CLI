@@ -76,26 +76,20 @@ release:
     irm https://github.com/ThreatOptic/CLI/releases/latest/download/install.ps1 | iex
     ```
 
-    Homebrew (macOS):
-
-    ```bash
-    brew install --cask threatoptic/tap/threatoptic
-    ```
-
-homebrew_casks:
-  - name: threatoptic
-    ids:
-      - threatoptic
-    repository:
-      owner: ThreatOptic
-      name: homebrew-tap
-    homepage: https://github.com/ThreatOptic/CLI
-    description: Command-line client for the ThreatOptic security monitoring platform
-    # The binaries are not signed or notarized, so macOS would otherwise refuse
-    # to run them. See https://goreleaser.com/customization/publish/homebrew_casks/
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/threatoptic"]
-          end
+# Homebrew cask publishing disabled for now — re-enable when a PAT can write to
+# ThreatOptic/homebrew-tap from CI.
+# homebrew_casks:
+#   - name: threatoptic
+#     ids:
+#       - threatoptic
+#     repository:
+#       owner: ThreatOptic
+#       name: homebrew-tap
+#     homepage: https://github.com/ThreatOptic/CLI
+#     description: Command-line client for the ThreatOptic security monitoring platform
+#     hooks:
+#       post:
+#         install: |
+#           if OS.mac?
+#             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/threatoptic"]
+#           end

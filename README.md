@@ -155,7 +155,7 @@ Commands depend on a small `client` interface rather than the concrete type, so 
 
 ## Releasing
 
-Pushing a semver tag (`v1.2.3`) triggers the release workflow, which runs tests and then [goreleaser](https://goreleaser.com) to build all five platform archives, write `checksums.txt`, create the GitHub release, and update the Homebrew cask in [ThreatOptic/homebrew-tap](https://github.com/ThreatOptic/homebrew-tap).
+Pushing a semver tag (`v1.2.3`) triggers the release workflow, which runs tests and then [goreleaser](https://goreleaser.com) to build all five platform archives, write `checksums.txt`, and create the GitHub release.
 
 To validate a config change without publishing anything:
 
@@ -166,7 +166,7 @@ make snapshot        # build every platform archive into dist/
 
 Archive names (`threatoptic_<version>_<os>_<arch>.tar.gz`) are a contract: `scripts/install.sh` and `scripts/install.ps1` reconstruct them. Change `archives.name_template` in `.goreleaser.yaml` and update both install scripts to match.
 
-Maintainers who publish from a workstation instead of CI need `GITHUB_TOKEN` with `contents: write` on this repository and on `ThreatOptic/homebrew-tap`, then:
+Maintainers who publish from a workstation instead of CI need `GITHUB_TOKEN` with `contents: write` on this repository, then:
 
 ```bash
 git tag -a v1.2.3 -m "Release v1.2.3"
