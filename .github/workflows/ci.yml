@@ -36,4 +36,7 @@ jobs:
           args: check
 
       - name: Snapshot build
-        run: goreleaser release --snapshot --clean --skip=publish
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --snapshot --clean --skip=publish
