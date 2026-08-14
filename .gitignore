@@ -1,0 +1,21 @@
+# Binaries
+/threatoptic
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test and coverage output
+*.test
+*.out
+coverage.html
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

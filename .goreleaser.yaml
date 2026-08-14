@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: threatoptic
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: threatoptic
+    main: ./cmd/threatoptic
+    binary: threatoptic
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: threatoptic
+    ids:
+      - threatoptic
+    # install.sh and install.ps1 reconstruct this name. Changing it breaks them.
+    name_template: "threatoptic_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+
+release:
+  github:
+    owner: ThreatOptic
+    name: CLI
+  prerelease: auto
+  extra_files:
+    - glob: ./scripts/install.sh
+    - glob: ./scripts/install.ps1
+  footer: |
+    ## Install
+
+    macOS and Linux:
+
+    ```bash
+    curl -fsSL https://github.com/ThreatOptic/CLI/releases/latest/download/install.sh | bash
+    ```
+
+    Windows (PowerShell):
+
+    ```powershell
+    irm https://github.com/ThreatOptic/CLI/releases/latest/download/install.ps1 | iex
+    ```
+
+    Homebrew (macOS):
+
+    ```bash
+    brew install --cask threatoptic/tap/threatoptic
+    ```
+
+homebrew_casks:
+  - name: threatoptic
+    ids:
+      - threatoptic
+    repository:
+      owner: ThreatOptic
+      name: homebrew-tap
+    homepage: https://github.com/ThreatOptic/CLI
+    description: Command-line client for the ThreatOptic security monitoring platform
+    # The binaries are not signed or notarized, so macOS would otherwise refuse
+    # to run them. See https://goreleaser.com/customization/publish/homebrew_casks/
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/threatoptic"]
+          end
