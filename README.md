@@ -155,7 +155,12 @@ Commands depend on a small `client` interface rather than the concrete type, so 
 
 ## Releasing
 
-Pushing a semver tag (`v1.2.3`) triggers the release workflow, which runs tests and then [goreleaser](https://goreleaser.com) to build all five platform archives, write `checksums.txt`, and create the GitHub release.
+Releases are cut from Jenkins (`Services/threatoptic-cli` on `main`). Every branch push runs tests and a goreleaser snapshot build. To publish, run the job on `main` with the **RELEASE_VERSION** parameter set to a new semver tag (for example `v0.1.0`). Jenkins tags `ThreatOptic/CLI`, pushes the tag, and goreleaser creates the GitHub release with all platform archives and `checksums.txt`.
+
+Prerequisites for maintainers:
+
+1. A GitHub token with `contents: write` on `ThreatOptic/CLI`, stored in the cluster as the Jenkins credential `threatoptic-cli-github-token` (via `TF_VAR_threatoptic_cli_github_token` in terraform).
+2. The `Jenkinsfile` at the repo root and the multibranch job defined in `terraform/jenkins.tf`.
 
 To validate a config change without publishing anything:
 
@@ -166,7 +171,7 @@ make snapshot        # build every platform archive into dist/
 
 Archive names (`threatoptic_<version>_<os>_<arch>.tar.gz`) are a contract: `scripts/install.sh` and `scripts/install.ps1` reconstruct them. Change `archives.name_template` in `.goreleaser.yaml` and update both install scripts to match.
 
-Maintainers who publish from a workstation instead of CI need `GITHUB_TOKEN` with `contents: write` on this repository, then:
+Maintainers who publish from a workstation instead of Jenkins need `GITHUB_TOKEN` with `contents: write` on this repository, then:
 
 ```bash
 git tag -a v1.2.3 -m "Release v1.2.3"
