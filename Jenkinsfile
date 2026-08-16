@@ -61,6 +61,14 @@ spec:
 
     stages {
 
+        stage('Git') {
+            steps {
+                // Container runs as root; Jenkins owns the checkout. Git 2.35+
+                // refuses that mix unless the workspace is a safe.directory.
+                sh 'git config --global --add safe.directory "$WORKSPACE"'
+            }
+        }
+
         stage('Test') {
             steps {
                 sh '''
