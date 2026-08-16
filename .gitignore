@@ -15,6 +15,11 @@ coverage.html
 go.work
 go.work.sum
 
+# CI scratch if a job ever writes inside the checkout
+.cache/
+.config/
+.gitconfig
+
 # Editors / OS
 .DS_Store
 .idea/

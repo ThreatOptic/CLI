@@ -53,9 +53,11 @@ spec:
     }
 
     environment {
-        HOME = "${env.WORKSPACE}"
-        GOCACHE = "${env.WORKSPACE}/.cache/go-build"
-        GOMODCACHE = "${env.WORKSPACE}/.cache/go-mod"
+        // Keep caches and gitconfig out of the checkout. HOME=WORKSPACE made
+        // goreleaser see a dirty tree (.cache/, .config/, .gitconfig).
+        HOME = "/tmp/build-home"
+        GOCACHE = "/tmp/go-build"
+        GOMODCACHE = "/tmp/go-mod"
         GORELEASER_VERSION = '2.17.1'
     }
 
@@ -65,7 +67,10 @@ spec:
             steps {
                 // Container runs as root; Jenkins owns the checkout. Git 2.35+
                 // refuses that mix unless the workspace is a safe.directory.
-                sh 'git config --global --add safe.directory "$WORKSPACE"'
+                sh '''
+                    mkdir -p "$HOME" "$GOCACHE" "$GOMODCACHE"
+                    git config --global --add safe.directory "$WORKSPACE"
+                '''
             }
         }
 
@@ -143,7 +148,9 @@ spec:
                                     status=$?
                                     set -e
                                     if [ "$status" -eq 2 ]; then
-                                        echo "HEAD is already released; nothing to publish."
+                                        RELEASE_TAG=$(git describe --tags --exact-match HEAD)
+                                        echo "HEAD is already tagged $RELEASE_TAG; publishing that tag."
+                                        goreleaser release --clean
                                         exit 0
                                     fi
                                     if [ "$status" -ne 0 ]; then
@@ -152,6 +159,11 @@ spec:
                                 fi
 
                                 if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
+                                    if [ "$(git rev-parse "${RELEASE_TAG}^{commit}")" = "$(git rev-parse HEAD)" ]; then
+                                        echo "Tag $RELEASE_TAG already points at HEAD; publishing."
+                                        goreleaser release --clean
+                                        exit 0
+                                    fi
                                     echo "Tag $RELEASE_TAG already exists. Pick a new version."
                                     exit 1
                                 fi
