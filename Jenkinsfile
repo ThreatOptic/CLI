@@ -61,7 +61,7 @@ spec:
                 sh '''
                     go version
                     go vet ./...
-                    test -z "$(gofmt -l .)" || { echo "These files need gofmt:"; gofmt -l .; exit 1; }
+                    test -z "$(git ls-files '*.go' | xargs gofmt -l)" || { echo "These files need gofmt:"; git ls-files '*.go' | xargs gofmt -l; exit 1; }
                     go test ./...
                 '''
             }
