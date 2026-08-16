@@ -15,6 +15,9 @@ builds:
       - CGO_ENABLED=0
     flags:
       - -trimpath
+      # Jenkins checkouts often fail `git status` (exit 128: missing repo or
+      # dubious ownership). Version is already injected via ldflags.
+      - -buildvcs=false
     ldflags:
       - -s -w -X main.version={{ .Version }}
     goos:
