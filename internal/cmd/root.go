@@ -50,7 +50,8 @@ func newRoot(version string, opts *options) *cobra.Command {
 	}
 
 	flags := root.PersistentFlags()
-	flags.StringVar(&opts.apiURL, "api-url", "", "ThreatOptic API base URL (default "+config.DefaultAPIURL+")")
+	flags.StringVar(&opts.apiURL, "api-url", "", "ThreatOptic API base URL")
+	_ = flags.MarkHidden("api-url")
 	flags.StringVar(&opts.apiKey, "api-key", "", "ThreatOptic API key (prefer 'threatoptic auth login')")
 	flags.BoolVar(&opts.json, "json", false, "output JSON instead of human-readable text")
 

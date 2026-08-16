@@ -185,6 +185,9 @@ func TestResolveDefaultsWhenNothingConfigured(t *testing.T) {
 
 	got := Resolve("", "", Config{})
 
+	if DefaultAPIURL != "https://api.threat-optic.com" {
+		t.Errorf("DefaultAPIURL = %q, want production API", DefaultAPIURL)
+	}
 	if got.APIURL != DefaultAPIURL {
 		t.Errorf("APIURL = %q, want %q", got.APIURL, DefaultAPIURL)
 	}

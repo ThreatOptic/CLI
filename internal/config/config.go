@@ -15,7 +15,7 @@ import (
 
 const (
 	// DefaultAPIURL is used when no URL is configured.
-	DefaultAPIURL = "http://localhost:8000"
+	DefaultAPIURL = "https://api.threat-optic.com"
 
 	// EnvAPIURL and EnvAPIKey are the environment variables read when no
 	// flag is supplied.

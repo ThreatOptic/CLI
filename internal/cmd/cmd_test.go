@@ -209,6 +209,19 @@ func TestWhoamiUsesResolvedURLAndKey(t *testing.T) {
 	}
 }
 
+func TestAPIURLFlagIsHiddenFromHelp(t *testing.T) {
+	h := newHarness(t, &fakeClient{}, "")
+
+	if err := h.run(t, "--help"); err != nil {
+		t.Fatalf("--help error: %v", err)
+	}
+
+	out := h.stdout.String() + h.stderr.String()
+	if strings.Contains(out, "api-url") {
+		t.Errorf("help listed --api-url; the flag must stay hidden:\n%s", out)
+	}
+}
+
 func TestAuthLoginStoresVerifiedKey(t *testing.T) {
 	h := newHarness(t, &fakeClient{user: testUser()}, "top_secretkey1234")
 

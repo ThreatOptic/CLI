@@ -87,30 +87,22 @@ $ threatoptic whoami --json
 | `threatoptic whoami` | Print the account id, email, and roles for the current key. |
 | `threatoptic check <query>` | Look up live lookalikes for a domain, package, or MCP name. |
 
-Global flags: `--api-url`, `--api-key`, `--json`.
+Global flags: `--api-key`, `--json`.
 
 ## Configuration
 
-Settings resolve in this order, first match wins:
+The API key resolves in this order, first match wins:
 
-| Priority | API URL | API key |
-| --- | --- | --- |
-| 1. Flag | `--api-url` | `--api-key` |
-| 2. Environment | `THREATOPTIC_API_URL` | `THREATOPTIC_API_KEY` |
-| 3. Config file | `api_url` | `api_key` |
-| 4. Default | `http://localhost:8000` | none |
+| Priority | API key |
+| --- | --- |
+| 1. Flag | `--api-key` |
+| 2. Environment | `THREATOPTIC_API_KEY` |
+| 3. Config file | `api_key` |
 
 The config file lives at `$XDG_CONFIG_HOME/threatoptic/config.yaml`, falling back to `~/.config/threatoptic/config.yaml`:
 
 ```yaml
-api_url: https://api.example.com
 api_key: top_...
-```
-
-Point at a different environment without touching the stored config:
-
-```bash
-threatoptic whoami --api-url https://api.example.com
 ```
 
 Run in CI without writing anything to disk:
