@@ -32,11 +32,9 @@ if (-not $Version) {
     $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -UseBasicParsing
     $Version = $release.tag_name
 }
-$number = $Version.TrimStart('v')
-
 # Only amd64 is published for Windows; arm64 machines run it under emulation.
 # Must match archives.name_template in .goreleaser.yaml.
-$archive = "${binary}_${number}_windows_amd64.zip"
+$archive = "${binary}_windows_amd64.zip"
 $base = "https://github.com/$repo/releases/download/$Version"
 
 $temp = Join-Path ([System.IO.Path]::GetTempPath()) "threatoptic-install-$([guid]::NewGuid())"

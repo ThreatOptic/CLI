@@ -147,7 +147,15 @@ Commands depend on a small `client` interface rather than the concrete type, so 
 
 ## Releasing
 
-Releases are cut from Jenkins (`Services/threatoptic-cli` on `main`). Every branch push runs tests and a goreleaser snapshot build. To publish, run the job on `main` with the **RELEASE_VERSION** parameter set to a new semver tag (for example `v0.1.0`). Jenkins tags `ThreatOptic/CLI`, pushes the tag, and goreleaser creates the GitHub release with all platform archives and `checksums.txt`.
+Merges to `main` publish automatically. Jenkins (`Services/threatoptic-cli`) runs tests on every branch and a goreleaser snapshot on non-`main` branches. On `main`, after tests pass, it runs `scripts/next-version.sh`, tags `ThreatOptic/CLI`, and goreleaser creates the GitHub release with all platform archives and `checksums.txt`.
+
+Version bump (from the highest existing `vMAJOR.MINOR.PATCH` tag, or `v0.1.0` if none):
+
+- **patch** (default) — including `fix:`, `chore:`, and unprefixed squash titles
+- **minor** — a commit contains `feat:` / `feat(` or `[minor]`
+- **major** — a commit contains `BREAKING CHANGE`, `feat!:` / `fix!:`, or `[major]`
+
+Overrides, if you need them: rebuild the `main` job with **RELEASE_VERSION** (`v1.2.3`) or **RELEASE_BUMP** (`patch` / `minor` / `major`). A rebuild of a commit that is already tagged is a no-op. Do not create a git tag named `latest` — GitHub’s `/releases/latest` already points at the newest semver release, and `install.sh` rejects a tag literally called `latest`.
 
 Prerequisites for maintainers:
 
@@ -161,7 +169,7 @@ make check           # validate .goreleaser.yaml
 make snapshot        # build every platform archive into dist/
 ```
 
-Archive names (`threatoptic_<version>_<os>_<arch>.tar.gz`) are a contract: `scripts/install.sh` and `scripts/install.ps1` reconstruct them. Change `archives.name_template` in `.goreleaser.yaml` and update both install scripts to match.
+Archive names (`threatoptic_<os>_<arch>.tar.gz`) are a contract: `scripts/install.sh`, `scripts/install.ps1`, and the dashboard reconstruct them. Change `archives.name_template` in `.goreleaser.yaml` and update those consumers to match. Current artifacts also live at `/releases/latest/download/` because the filename does not include the version.
 
 Maintainers who publish from a workstation instead of Jenkins need `GITHUB_TOKEN` with `contents: write` on this repository, then:
 

@@ -1,8 +1,9 @@
-// Test on every branch; publish a release only when RELEASE_VERSION is set on main.
+// Test on every branch. On main, auto-bump semver, tag, and publish.
+// Feature branches only snapshot-build. Override with RELEASE_VERSION or RELEASE_BUMP.
 //
 // Releasing is goreleaser's job (see .goreleaser.yaml): it builds all five
 // platform archives, writes checksums.txt, and creates the GitHub release.
-// This pipeline decides when that happens, and tags the repo first.
+// scripts/next-version.sh decides the tag when no override is set.
 
 pipeline {
     agent {
@@ -42,7 +43,12 @@ spec:
         string(
             name: 'RELEASE_VERSION',
             defaultValue: '',
-            description: 'Semver tag to publish, for example v0.1.0. Leave empty to only build and test.'
+            description: 'Optional exact tag to publish, for example v0.1.0. Leave empty to auto-bump on main.'
+        )
+        string(
+            name: 'RELEASE_BUMP',
+            defaultValue: '',
+            description: 'Optional auto-bump: patch, minor, or major. Ignored when RELEASE_VERSION is set.'
         )
     }
 
@@ -51,7 +57,6 @@ spec:
         GOCACHE = "${env.WORKSPACE}/.cache/go-build"
         GOMODCACHE = "${env.WORKSPACE}/.cache/go-mod"
         GORELEASER_VERSION = '2.17.1'
-        IS_RELEASE = "${params.RELEASE_VERSION ? 'true' : 'false'}"
     }
 
     stages {
@@ -78,10 +83,10 @@ spec:
             }
         }
 
-        // Proves the release would build before anyone tags anything.
+        // Proves the packaging config on branches without publishing.
         stage('Snapshot') {
             when {
-                expression { env.IS_RELEASE == 'false' }
+                not { branch 'main' }
             }
             steps {
                 sh 'goreleaser release --snapshot --clean --skip=publish'
@@ -91,35 +96,57 @@ spec:
 
         stage('Release') {
             when {
-                allOf {
-                    expression { env.IS_RELEASE == 'true' }
-                    branch 'main'
-                }
+                branch 'main'
             }
             steps {
                 script {
-                    def version = params.RELEASE_VERSION.trim()
-                    if (!(version ==~ /^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/)) {
-                        error("RELEASE_VERSION must look like v1.2.3 or v1.2.3-rc1, got '${version}'")
+                    def override = params.RELEASE_VERSION?.trim()
+                    if (override && !(override ==~ /^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/)) {
+                        error("RELEASE_VERSION must look like v1.2.3 or v1.2.3-rc1, got '${override}'")
+                    }
+                    def bump = params.RELEASE_BUMP?.trim()
+                    if (bump && !(['patch', 'minor', 'major'].contains(bump))) {
+                        error("RELEASE_BUMP must be patch, minor, or major, got '${bump}'")
                     }
 
                     withCredentials([string(credentialsId: 'threatoptic-cli-github-token', variable: 'GITHUB_TOKEN')]) {
-                        withEnv(["RELEASE_TAG=${version}"]) {
+                        withEnv(["RELEASE_TAG_OVERRIDE=${override ?: ''}", "RELEASE_BUMP=${bump ?: ''}"]) {
                             sh '''
                                 set -e
 
                                 # Multibranch checkouts are shallow and tagless; goreleaser needs
-                                # the full history to build the changelog.
+                                # the full history to build the changelog and next-version.sh
+                                # needs existing tags.
                                 git fetch --tags --unshallow || git fetch --tags
+
+                                git config user.email "jenkins@threat-optic.com"
+                                git config user.name "ThreatOptic Jenkins"
+                                git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/ThreatOptic/CLI.git"
+
+                                if [ -n "$RELEASE_TAG_OVERRIDE" ]; then
+                                    RELEASE_TAG="$RELEASE_TAG_OVERRIDE"
+                                else
+                                    set +e
+                                    if [ -n "$RELEASE_BUMP" ]; then
+                                        RELEASE_TAG=$(bash scripts/next-version.sh "$RELEASE_BUMP")
+                                    else
+                                        RELEASE_TAG=$(bash scripts/next-version.sh)
+                                    fi
+                                    status=$?
+                                    set -e
+                                    if [ "$status" -eq 2 ]; then
+                                        echo "HEAD is already released; nothing to publish."
+                                        exit 0
+                                    fi
+                                    if [ "$status" -ne 0 ]; then
+                                        exit "$status"
+                                    fi
+                                fi
 
                                 if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
                                     echo "Tag $RELEASE_TAG already exists. Pick a new version."
                                     exit 1
                                 fi
-
-                                git config user.email "jenkins@threat-optic.com"
-                                git config user.name "ThreatOptic Jenkins"
-                                git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/ThreatOptic/CLI.git"
 
                                 git tag -a "$RELEASE_TAG" -m "Release $RELEASE_TAG"
                                 git push origin "$RELEASE_TAG"

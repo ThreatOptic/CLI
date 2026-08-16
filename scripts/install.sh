@@ -83,13 +83,12 @@ main() {
 	need tar
 	command -v sha256sum >/dev/null 2>&1 || need shasum
 
-	local os arch tag version archive tmp install_dir
+	local os arch tag archive tmp install_dir
 	os=$(detect_os)
 	arch=$(detect_arch)
 	tag="${THREATOPTIC_VERSION:-$(latest_tag)}"
-	version="${tag#v}"
 	# Must match archives.name_template in .goreleaser.yaml.
-	archive="${BINARY}_${version}_${os}_${arch}.tar.gz"
+	archive="${BINARY}_${os}_${arch}.tar.gz"
 
 	workdir=$(mktemp -d)
 	tmp="$workdir"

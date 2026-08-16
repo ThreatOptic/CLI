@@ -36,7 +36,8 @@ archives:
     ids:
       - threatoptic
     # install.sh and install.ps1 reconstruct this name. Changing it breaks them.
-    name_template: "threatoptic_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Version lives on the GitHub release tag so /releases/latest/download/ stays valid.
+    name_template: "threatoptic_{{ .Os }}_{{ .Arch }}"
     formats:
       - tar.gz
     format_overrides:
